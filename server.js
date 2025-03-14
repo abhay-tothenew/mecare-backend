@@ -5,12 +5,14 @@ const morgan = require("morgan");
 
 const app = express();
 const http = require("http");
+const passport = require("passport");
 const server = http.createServer(app);
 
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 app.use("/api/users", require("./routes/users"));
 app.use("/api/doctors", require("./routes/doctors"));
