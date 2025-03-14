@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Slots Table
+--- Slots Table
 CREATE TABLE IF NOT EXISTS slots (
     slot_id SERIAL PRIMARY KEY,
     doctor_id UUID REFERENCES doctors(doctor_id) ON DELETE CASCADE,
