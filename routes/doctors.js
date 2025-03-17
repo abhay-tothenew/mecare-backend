@@ -6,11 +6,15 @@ const{
     getDoctors,
     getDoctorById,
     updateDoctor,
-    deleteDoctor
+    deleteDoctor,
+    getTopDoctors,
+    getDoctorsBySpecialization
 } = require("../controllers/doctorsController");
 
 
 router.get("/",getDoctors);
+router.get("/top6",getTopDoctors);
+router.get("/specialization/:category_name",getDoctorsBySpecialization);
 router.get("/:id",getDoctorById);
 router.post("/",createDoctor);
 router.put("/:id",updateDoctor);

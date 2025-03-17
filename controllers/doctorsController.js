@@ -21,20 +21,59 @@ exports.getDoctorById = async (req, res) => {
   }
 };
 
-exports.createDoctor = async (req, res) => {
-    const { name, specialization, qualification, experience, location, phone, email } = req.body;
+//for top 6 doctors
 
-    try {
-        const result = await pool.query(
-            `INSERT INTO doctors (name, specialization, qualification, experience, location, phone, email)
+exports.getTopDoctors = async (req, res) => {
+  try {
+    const doctors = await pool.query(
+      "SELECT * FROM doctors ORDER BY experience DESC LIMIT 6"
+    );
+    console.log(doctors.rows);
+    res.json(doctors.rows);
+  } catch (err) {
+    console.error("Error in getTopDoctors: ", err.message);
+  }
+};
+
+//fetch doctors based on specialization
+
+exports.getDoctorsBySpecialization = async (req, res) => {
+  try {
+    const { category_name } = req.params;
+    const catName = category_name.replaceAll(" ","_");
+    const doctors = await pool.query(
+      "SELECT * FROM doctors WHERE specialization = $1",
+      [catName]
+    );
+    // console.log(category_name);
+    res.json(doctors.rows);
+  } catch (err) {
+    console.error("Error in getDoctorsBySpecialization: ", err.message);
+  }
+};
+
+exports.createDoctor = async (req, res) => {
+  const {
+    name,
+    specialization,
+    qualification,
+    experience,
+    location,
+    phone,
+    email,
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO doctors (name, specialization, qualification, experience, location, phone, email)
             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [name, specialization, qualification, experience, location, phone, email]
-        );
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+      [name, specialization, qualification, experience, location, phone, email]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 exports.updateDoctor = async (req, res) => {
@@ -61,3 +100,4 @@ exports.deleteDoctor = async (req, res) => {
     console.error(err.message);
   }
 };
+

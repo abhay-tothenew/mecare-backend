@@ -62,5 +62,6 @@ CREATE TABLE IF NOT EXISTS admins (
 -- Disease Categories Table
 CREATE TABLE IF NOT EXISTS disease_categories (
     category_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    category_name VARCHAR(255) NOT NULL
+    category_name VARCHAR(255) NOT NULL,
+    category_tag VARCHAR(255) NOT NULL
 );
