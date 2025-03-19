@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const moment = require("moment");
 
 exports.getAppointments = async (req, res) => {
   try {
@@ -29,7 +30,6 @@ exports.getAppointmentById = async (req, res) => {
   }
 };
 
-
 exports.createAppointment = async (req, res) => {
   try {
     const {
@@ -46,22 +46,31 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    // Check if a slot already exists for this doctor at this time
+    const startTime = moment(appointment_time, "HH:mm:ss").format("HH:mm:ss");
+    const endTime = moment(startTime, "HH:mm:ss")
+      .add(30, "minutes")
+      .format("HH:mm:ss");
+
     let slotResult = await pool.query(
-      `SELECT slot_id FROM slots WHERE doctor_id = $1 AND start_time = $2`,
-      [doctor_id, appointment_time]
+      `SELECT slot_id FROM slots WHERE doctor_id = $1 AND start_time = $2 AND slot_date = $3`,
+      [doctor_id, startTime, appointment_date]
     );
 
     let slot_id;
     if (slotResult.rows.length === 0) {
       const newSlot = await pool.query(
-        `INSERT INTO slots (doctor_id, start_time, end_time, availability_status) 
-         VALUES ($1, $2, $3, FALSE) RETURNING slot_id`,
-        [doctor_id, appointment_time, appointment_time] // TODO: add end_time
+        `INSERT INTO slots (doctor_id, start_time, end_time, slot_date, availability_status) 
+         VALUES ($1, $2, $3, $4, FALSE) RETURNING slot_id`,
+        [doctor_id, startTime, endTime, appointment_date]
       );
       slot_id = newSlot.rows[0].slot_id;
     } else {
       slot_id = slotResult.rows[0].slot_id;
+
+      await pool.query(
+        `UPDATE slots SET availability_status = FALSE WHERE slot_id = $1`,
+        [slot_id]
+      );
     }
 
     const appointmentResult = await pool.query(
@@ -74,11 +83,14 @@ exports.createAppointment = async (req, res) => {
         slot_id,
         appointment_type,
         appointment_date,
-        appointment_time,
+        startTime,
       ]
     );
 
-    res.status(201).json(appointmentResult.rows[0]);
+    res.status(201).json({
+      message: "Appointment created successfully!",
+      appointment: appointmentResult.rows[0],
+    });
   } catch (err) {
     console.error("Error creating appointment:", err.message);
     res.status(500).json({ error: "Internal server error" });

@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS slots (
     doctor_id UUID REFERENCES doctors(doctor_id) ON DELETE CASCADE,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
+    slot_date DATE NOT NULL,
     slot_type VARCHAR(50),
     availability_status BOOLEAN DEFAULT TRUE
 );

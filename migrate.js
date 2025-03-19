@@ -11,7 +11,7 @@ const pool = new Pool({
   // port:process.env.PGSQL_PORT
 
   user: "postgres",
-  password: "meerut123",
+  password: "abhay123",
   host: "localhost",
   database: "mecaredb",
   port: "5432",

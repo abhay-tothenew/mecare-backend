@@ -6,7 +6,7 @@ const {Pool} = require("pg");
 // what is pool?
 // pool is a connection pool that can be used to get connections from the database
 const pool  = new Pool({
-    connectionString:"postgresql://postgres:meerut123@localhost:5432/mecaredb"
+    connectionString:"postgresql://postgres:abhay123@localhost:5432/mecaredb"
 });
 
 
