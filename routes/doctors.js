@@ -15,7 +15,7 @@ const{
 router.get("/",getDoctors);
 router.get("/top6",getTopDoctors);
 router.get("/specialization/:category_name",getDoctorsBySpecialization);
-router.get("/:id",getDoctorById);
+router.get("/:doctor_id",getDoctorById);
 router.post("/",createDoctor);
 router.put("/:id",updateDoctor);
 router.delete("/:id",deleteDoctor);    

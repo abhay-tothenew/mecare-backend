@@ -11,11 +11,14 @@ exports.getDoctors = async (req, res) => {
 
 exports.getDoctorById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const doctor = await pool.query("SELECT * FROM doctors WHERE id = $1", [
-      id,
+    const { doctor_id } = req.params;
+    const doctor = await pool.query("SELECT * FROM doctors WHERE doctor_id = $1", [
+      doctor_id,
     ]);
-    res.json(doctor.rows[0]);
+    res.json({
+      message: "Doctor fetched successfully",
+      doctor: doctor.rows[0],
+    });
   } catch (err) {
     console.error(err.message);
   }
