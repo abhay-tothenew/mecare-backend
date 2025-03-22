@@ -4,7 +4,7 @@ const moment = require("moment");
 exports.getAppointments = async (req, res) => {
   try {
     const appointments = await pool.query("SELECT * FROM appointments");
-    res.send(200).json({
+    res.json({
       message: "Appointments retrieved successfully",
       appointments: appointments.rows,
     });
@@ -26,7 +26,7 @@ exports.getAppointmentById = async (req, res) => {
       return res.status(404).json({ message: "No appointments found" });
     }
 
-    res.send(200).json({
+    res.json({
       message: "Appointments retrieved successfully",
       appointments: appointments.rows,
     });
@@ -93,13 +93,13 @@ exports.createAppointment = async (req, res) => {
       ]
     );
 
-    res.status(201).json({
+    res.json({
       message: "Appointment created successfully!",
       appointment: appointmentResult.rows[0],
     });
   } catch (err) {
     console.error("Error creating appointment:", err.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.json({ error: "Internal server error" });
   }
 };
 
@@ -122,7 +122,7 @@ exports.deleteAppointment = async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query("DELETE FROM appointments WHERE id = $1", [id]);
-    res.send(200).json({
+    res.json({
       success: true,
       message: "Appointment deleted successfully",
     });

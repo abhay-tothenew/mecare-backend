@@ -8,21 +8,19 @@ exports.registerUser = async (req, res) => {
   try {
     const { user_type,display_name, name, email, phone, password } = req.body;
     if (!user_type || !name || !email || !password || !phone || !display_name) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all the required fields." });
+      return res.json({ message: "Please provide all the required fields." });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await pool.query(
       "INSERT INTO users(user_type,display_name,name,email,phone,password) VALUES($1,$2,$3,$4,$5,$6) RETURNING *",
       [user_type,display_name,name,email,phone,hashedPassword]
     );
-    res.status(201).json(user.rows[0]);
+    res.json(user.rows[0]);
 
     console.log(user);
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Internal server error" ,err});
+    res.json({ message: "Internal server error" ,err});
   }
 };
 
@@ -30,9 +28,7 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all the required fields." });
+      return res.json({ message: "Please provide all the required fields." });
     }
     const user = await pool.query("SELECT * FROM users WHERE email=$1", [
       email,
@@ -52,7 +48,7 @@ exports.loginUser = async (req, res) => {
     }
     const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET_KEY,{ expiresIn: "1h" });
 
-    res.status(200).json({ token , user: user.rows[0] });
+    res.json({ token , user: user.rows[0] });
   } catch (err) {
     console.log("Error while login",err);
     res.status(500).json({ message: "Internal server error" });

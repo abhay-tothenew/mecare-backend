@@ -15,7 +15,7 @@ exports.addDiseaseCategory = async (req,res)=>{
     try{
         const {category_name,category_tag} = req.body;
         const diseaseCategory = await pool.query("INSERT INTO disease_categories(category_name,category_tag) VALUES($1,$2) RETURNING *",[category_name,category_tag]);
-        res.send(200).json({
+        res.json({
             Success:"Disease category added successfully",
             category_id:diseaseCategory.rows[0].category_id
         });
