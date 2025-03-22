@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 
+
 exports.registerUser = async (req, res) => {
   try {
     const { user_type,display_name, name, email, phone, password } = req.body;
@@ -41,13 +42,13 @@ exports.loginUser = async (req, res) => {
       password,
       user.rows[0].password
     );
-    // console.log("token",process.env.JWT_SECRET_KEY);
 
     if (!isPasswordCorrect) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET_KEY,{ expiresIn: "1h" });
 
+    console.log("token from login",token);
     res.json({ token , user: user.rows[0] });
   } catch (err) {
     console.log("Error while login",err);
