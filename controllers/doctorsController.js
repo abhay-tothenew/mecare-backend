@@ -9,6 +9,7 @@ exports.getDoctors = async (req, res) => {
   }
 };
 
+
 exports.getDoctorById = async (req, res) => {
   try {
     const { doctor_id } = req.params;

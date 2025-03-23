@@ -18,7 +18,7 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/doctors", require("./routes/doctors"));
 app.use("/api/appointments", require("./routes/appointments"));
 app.use("/api/disease",require("./routes/disease"));
-// app.use("/api/slots",require("./routes/slots")); //TODO: add slots route
+app.use("/api/slots",require("./routes/slots"));
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

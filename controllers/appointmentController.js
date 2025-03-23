@@ -44,6 +44,12 @@ exports.createAppointment = async (req, res) => {
       appointment_type,
       appointment_date,
       appointment_time,
+      patient_name,
+      phone_number,
+      patient_email,
+      patient_gender,
+      patient_age,
+      health_description,
     } = req.body;
 
     if (!["online", "in-person"].includes(appointment_type)) {
@@ -65,9 +71,9 @@ exports.createAppointment = async (req, res) => {
     let slot_id;
     if (slotResult.rows.length === 0) {
       const newSlot = await pool.query(
-        `INSERT INTO slots (doctor_id, start_time, end_time, slot_date, availability_status) 
-         VALUES ($1, $2, $3, $4, FALSE) RETURNING slot_id`,
-        [doctor_id, startTime, endTime, appointment_date]
+        `INSERT INTO slots (doctor_id, start_time, end_time, slot_date, availability_status,slot_type) 
+         VALUES ($1, $2, $3, $4,$5 FALSE) RETURNING slot_id`,
+        [doctor_id, startTime, endTime, appointment_date, appointment_type]
       );
       slot_id = newSlot.rows[0].slot_id;
     } else {
@@ -80,8 +86,8 @@ exports.createAppointment = async (req, res) => {
     }
 
     const appointmentResult = await pool.query(
-      `INSERT INTO appointments (user_id, doctor_id, slot_id, appointment_type, appointment_date, appointment_time) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO appointments (user_id, doctor_id, slot_id, appointment_type, appointment_date, appointment_time, patient_name, phone_number, patient_email, patient_gender, patient_age, health_description) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         user_id,
@@ -90,6 +96,12 @@ exports.createAppointment = async (req, res) => {
         appointment_type,
         appointment_date,
         startTime,
+        patient_name,
+        phone_number,
+        patient_email,
+        patient_gender,
+        patient_age,
+        health_description,
       ]
     );
 
@@ -99,18 +111,46 @@ exports.createAppointment = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating appointment:", err.message);
-    res.json({ error: "Internal server error" });
+    res.json({ error: "Internal server error", message: err.message });
   }
 };
 
 exports.updateAppointment = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { appointment_id } = req.params;
     const { doctor_id, patient_id, appointment_date, appointment_time } =
       req.body;
     const appointment = await pool.query(
-      "UPDATE appointments SET doctor_id=$1, patient_id=$2, appointment_date=$3, appointment_time=$4 WHERE id=$5 RETURNING *",
-      [doctor_id, patient_id, appointment_date, appointment_time, id]
+      "UPDATE appointments SET doctor_id=$1, patient_id=$2, appointment_date=$3, appointment_time=$4 WHERE appointment_id=$5 RETURNING *",
+      [
+        doctor_id,
+        patient_id,
+        appointment_date,
+        appointment_time,
+        appointment_id,
+      ]
+    );
+    res.json(appointment.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+  }
+};
+
+exports.updateAppointmentStatus = async (req, res) => {
+  try {
+    const { appointment_id } = req.params;
+    const { status } = req.body;
+
+    if (!["pending", "confirmed", "completed", "cancelled"].includes(status)) {
+      return res.status(400).json({
+        error:
+          "Invalid appointment status. Choose 'pending','confirmed', 'completed', or 'cancelled'.",
+      });
+    }
+
+    const appointment = await pool.query(
+      "UPDATE appointments SET status=$1 WHERE appointment_id=$2 RETURNING *",
+      [status, appointment_id]
     );
     res.json(appointment.rows[0]);
   } catch (err) {

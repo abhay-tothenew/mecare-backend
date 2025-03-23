@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     doctor_id UUID REFERENCES doctors(doctor_id) ON DELETE CASCADE,
     slot_id INT REFERENCES slots(slot_id) ON DELETE CASCADE,
     appointment_type VARCHAR(20) CHECK (appointment_type IN ('online', 'in-person')) NOT NULL,
-    status VARCHAR(10) CHECK (status IN ('pending', 'confirmed', 'cancelled')) DEFAULT 'pending',
+    status VARCHAR(10) CHECK (status IN ('pending', 'confirmed','completed', 'cancelled')) DEFAULT 'pending',
     team_id TEXT,
     appointment_date DATE NOT NULL,
     appointment_time TIME NOT NULL,
