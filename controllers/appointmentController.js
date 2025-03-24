@@ -5,11 +5,17 @@ exports.getAppointments = async (req, res) => {
   try {
     const appointments = await pool.query("SELECT * FROM appointments");
     res.json({
+      success: true,
       message: "Appointments retrieved successfully",
       appointments: appointments.rows,
     });
   } catch (err) {
     console.error("Error in getAppointments: ", err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
@@ -27,12 +33,17 @@ exports.getAppointmentById = async (req, res) => {
     }
 
     res.json({
+      success: true,
       message: "Appointments retrieved successfully",
       appointments: appointments.rows,
     });
   } catch (err) {
     console.error("Error fetching appointments:", err.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
@@ -72,7 +83,7 @@ exports.createAppointment = async (req, res) => {
     if (slotResult.rows.length === 0) {
       const newSlot = await pool.query(
         `INSERT INTO slots (doctor_id, start_time, end_time, slot_date, availability_status,slot_type) 
-         VALUES ($1, $2, $3, $4,$5 FALSE) RETURNING slot_id`,
+         VALUES ($1, $2, $3, $4, FALSE, $5) RETURNING slot_id`,
         [doctor_id, startTime, endTime, appointment_date, appointment_type]
       );
       slot_id = newSlot.rows[0].slot_id;
@@ -106,36 +117,44 @@ exports.createAppointment = async (req, res) => {
     );
 
     res.json({
+      success: true,
       message: "Appointment created successfully!",
       appointment: appointmentResult.rows[0],
     });
   } catch (err) {
     console.error("Error creating appointment:", err.message);
-    res.json({ error: "Internal server error", message: err.message });
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
 exports.updateAppointment = async (req, res) => {
   try {
     const { appointment_id } = req.params;
-    const { doctor_id, patient_id, appointment_date, appointment_time } =
-      req.body;
+    const { appointment_type, appointment_date, appointment_time } = req.body;
     const appointment = await pool.query(
-      "UPDATE appointments SET doctor_id=$1, patient_id=$2, appointment_date=$3, appointment_time=$4 WHERE appointment_id=$5 RETURNING *",
-      [
-        doctor_id,
-        patient_id,
-        appointment_date,
-        appointment_time,
-        appointment_id,
-      ]
+      "UPDATE appointments SET appointment_type=$1, appointment_date=$2, appointment_time=$3 WHERE appointment_id=$4 RETURNING *",
+      [appointment_type, appointment_date, appointment_time, appointment_id]
     );
-    res.json(appointment.rows[0]);
+    res.json({
+      success: true,
+      message: "Appointment updated successfully",
+      appointment: appointment.rows[0],
+    });
   } catch (err) {
     console.error(err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
+//FOR ADMIN PURPOSES
 exports.updateAppointmentStatus = async (req, res) => {
   try {
     const { appointment_id } = req.params;
@@ -152,22 +171,46 @@ exports.updateAppointmentStatus = async (req, res) => {
       "UPDATE appointments SET status=$1 WHERE appointment_id=$2 RETURNING *",
       [status, appointment_id]
     );
-    res.json(appointment.rows[0]);
+    res.json({
+      success: true,
+      message: "Appointment status updated successfully",
+    });
   } catch (err) {
     console.error(err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
 exports.deleteAppointment = async (req, res) => {
   try {
-    const { id } = req.params;
-    await pool.query("DELETE FROM appointments WHERE id = $1", [id]);
+    const token = req.headers.authorization;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized",
+        message: "Unauthorized access",
+      });
+    }
+    const { appointment_id } = req.params;
+
+    await pool.query("DELETE FROM appointments WHERE appointment_id = $1", [
+      appointment_id,
+    ]);
     res.json({
       success: true,
       message: "Appointment deleted successfully",
     });
   } catch (err) {
     console.error(err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 

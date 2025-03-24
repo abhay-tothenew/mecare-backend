@@ -7,6 +7,7 @@ const {
   registerUser,
   loginUser,
   getUsers,
+  updateProfile,
 } = require("../controllers/userController");
 const verifyToken = require("../middleware/verifyToken");
 
@@ -31,4 +32,6 @@ router.get("/profile", verifyToken, async (req, res) => {
     });
   }
 });
+
+router.put("/:user_id",updateProfile);
 module.exports = router;
