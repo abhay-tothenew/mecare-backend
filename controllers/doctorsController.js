@@ -3,25 +3,40 @@ const pool = require("../config/db");
 exports.getDoctors = async (req, res) => {
   try {
     const doctors = await pool.query("SELECT * FROM doctors");
-    res.json(doctors.rows);
+    res.json({
+      success: true,
+      message: "Doctors retrieved successfully",
+      doctors: doctors.rows,
+    });
   } catch (err) {
     console.error(err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
-
 
 exports.getDoctorById = async (req, res) => {
   try {
     const { doctor_id } = req.params;
-    const doctor = await pool.query("SELECT * FROM doctors WHERE doctor_id = $1", [
-      doctor_id,
-    ]);
+    const doctor = await pool.query(
+      "SELECT * FROM doctors WHERE doctor_id = $1",
+      [doctor_id]
+    );
     res.json({
+      success: true,
       message: "Doctor fetched successfully",
       doctor: doctor.rows[0],
     });
   } catch (err) {
     console.error(err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
@@ -32,10 +47,19 @@ exports.getTopDoctors = async (req, res) => {
     const doctors = await pool.query(
       "SELECT * FROM doctors ORDER BY experience DESC LIMIT 6"
     );
-    console.log(doctors.rows);
-    res.json(doctors.rows);
+    // console.log(doctors.rows);
+    res.json({
+      success: true,
+      message: "Top doctors retrieved successfully",
+      doctors: doctors.rows,
+    });
   } catch (err) {
     console.error("Error in getTopDoctors: ", err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
@@ -44,15 +68,36 @@ exports.getTopDoctors = async (req, res) => {
 exports.getDoctorsBySpecialization = async (req, res) => {
   try {
     const { category_name } = req.params;
-    const catName = category_name.replaceAll(" ","_");
+    const catName = category_name.replaceAll(" ", "_");
     const doctors = await pool.query(
       "SELECT * FROM doctors WHERE specialization = $1",
       [catName]
     );
+
+    const total_count = await pool.query(
+      "SELECT COUNT(*) FROM doctors WHERE specialization = $1",
+      [catName]
+    );
+
+    const total_doctors = total_count.rows[0].count;
+    const total_pages = Math.ceil(total_doctors / 6);
     // console.log(category_name);
-    res.json(doctors.rows);
+    res.json({
+      success: true,
+      message: "Doctors retrieved successfully",
+      doctors: doctors.rows,
+      Pagination: {
+        total_doctors: total_doctors,
+        total_pages: total_pages,
+      },
+    });
   } catch (err) {
     console.error("Error in getDoctorsBySpecialization: ", err.message);
+    res.json({
+      success: false,
+      error: "Internal server error",
+      message: err.message,
+    });
   }
 };
 
@@ -104,4 +149,3 @@ exports.deleteDoctor = async (req, res) => {
     console.error(err.message);
   }
 };
-

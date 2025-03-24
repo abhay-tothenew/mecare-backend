@@ -5,8 +5,9 @@ exports.getSlots = async (req, res) => {
   try {
     const slots = await pool.query("SELECT * FROM slots");
     res.json({
+      success: true,
       message: "Slots retrieved successfully",
-      slots: slots.rows,
+      slots: slots.rows[0],
     });
   } catch (err) {
     console.error("Error in getSlots: ", err.message);
@@ -25,6 +26,7 @@ exports.getSlotByDoctorId = async (req, res) => {
         const slots = await pool.query("SELECT * FROM slots WHERE doctor_id = $1",[doctor_id]);
 
         res.json({
+            success:true,
             message:"Slots retrieved successfully",
             slots:slots.rows
         })

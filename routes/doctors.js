@@ -8,7 +8,8 @@ const{
     updateDoctor,
     deleteDoctor,
     getTopDoctors,
-    getDoctorsBySpecialization
+    getDoctorsBySpecialization,
+    getDoctorsForPagination
 } = require("../controllers/doctorsController");
 
 
