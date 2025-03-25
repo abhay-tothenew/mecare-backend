@@ -25,7 +25,7 @@ exports.getAppointmentById = async (req, res) => {
     );
 
     if (appointments.rows.length === 0) {
-      return res.status(404).json({ message: "No appointments found" });
+      return res.json({ success:false, message:"No appointments found for this user or doctor" });
     }
 
     res.json({

@@ -141,11 +141,10 @@ exports.createDoctor = async (req, res) => {
 exports.updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password, specialization, experience, bio } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10); //this will be changed to bcrypt later
+    const { name, email, specialization, experience, bio } = req.body;
     const doctor = await pool.query(
-      "UPDATE doctors SET name=$1, email=$2, password_hash=$3, specialization=$4, experience=$5, bio=$6 WHERE id=$7 RETURNING *",
-      [name, email, hashedPassword, specialization, experience, bio, id]
+      "UPDATE doctors SET name=$1, email=$2, specialization=$4, experience=$5, bio=$6 WHERE doctor_id=$7 RETURNING *",
+      [name, email, specialization, experience, bio, id]
     );
     res.json(doctor.rows[0]);
   } catch (err) {

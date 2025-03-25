@@ -14,7 +14,18 @@ exports.registerUser = async (req, res) => {
       "INSERT INTO users(user_type,display_name,name,email,phone,password) VALUES($1,$2,$3,$4,$5,$6) RETURNING *",
       [user_type, display_name, name, email, phone, hashedPassword]
     );
-    res.json(user.rows[0]);
+
+    const token = jwt.sign(
+      { id: user.rows[0].id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    res.json({
+      success: true,
+      message: "User created successfully",
+      token: token,
+      user: user.rows[0],
+    });
 
     console.log(user);
   } catch (err) {
@@ -50,7 +61,7 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    console.log("token from login", token);
+    // console.log("token from login", token);
     res.json({ token, user: user.rows[0] });
   } catch (err) {
     console.log("Error while login", err);
@@ -98,7 +109,6 @@ exports.updateProfile = async (req, res) => {
       emergency_relation,
       user_id,
     ]);
-
 
     delete updatedUser.rows[0].password;
     res.json({
