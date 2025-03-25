@@ -6,7 +6,7 @@ require("dotenv").config();
 exports.registerUser = async (req, res) => {
   try {
     const { user_type, display_name, name, email, phone, password } = req.body;
-    if (!user_type || !name || !email || !password || !phone || !display_name) {
+    if (!user_type || !name || !email || !password || !display_name) {
       return res.json({ message: "Please provide all the required fields." });
     }
     const hashedPassword = await bcrypt.hash(password, 10);

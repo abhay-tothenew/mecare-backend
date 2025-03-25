@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 const moment = require("moment");
-
+const sendMail = require("../services/emailService");
 exports.getAppointments = async (req, res) => {
   try {
     const appointments = await pool.query("SELECT * FROM appointments");
@@ -25,7 +25,10 @@ exports.getAppointmentById = async (req, res) => {
     );
 
     if (appointments.rows.length === 0) {
-      return res.json({ success:false, message:"No appointments found for this user or doctor" });
+      return res.json({
+        success: false,
+        message: "No appointments found for this user or doctor",
+      });
     }
 
     res.json({
@@ -167,9 +170,50 @@ exports.updateAppointmentStatus = async (req, res) => {
       "UPDATE appointments SET status=$1 WHERE appointment_id=$2 RETURNING *",
       [status, appointment_id]
     );
+
+    if (appointment.rowCount === 0) {
+      return res.json({
+        error: "Appointment not found",
+        message: "Appointment not found",
+      });
+    }
+
+    const appointmentDB = appointment.rows[0];
+    console.log("appointmentDB--->>>", appointmentDB);
+
+    const user_details = await pool.query("SELECT * FROM users WHERE user_id = $1", [
+      appointmentDB.user_id,
+    ]);
+
+    if (user_details.rowCount === 0) {
+      return res.json({
+        error: "User not found",
+        message: "User not found",
+      });
+    }
+
+    const user_email = user_details.rows[0].email;
+    let subject = `MeCare - Your Appointment Status: ${status}`;
+    let message = "";
+
+    if (status === "pending") {
+      message =
+        "Your appointment request has been received and is currently pending confirmation.";
+    } else if (status === "confirmed") {
+      message =
+        "Great news! Your appointment has been confirmed. Please be on time.";
+    } else if (status === "rejected") {
+      message =
+        "We regret to inform you that your appointment request has been rejected. Please try booking another slot.";
+    } else {
+      message = `Your appointment status has been updated to ${status}.`;
+    }
+
+    await sendMail(user_email, subject, message);
+
     res.json({
       success: true,
-      message: "Appointment status updated successfully",
+      message: "Appointment status updated and email sent successfully.",
     });
   } catch (err) {
     console.error(err.message);
