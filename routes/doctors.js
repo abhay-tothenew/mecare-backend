@@ -19,6 +19,6 @@ router.get("/specialization/:category_name",getDoctorsBySpecialization);
 router.get("/:doctor_id",getDoctorById);
 router.post("/",createDoctor);
 router.put("/:id",updateDoctor);
-router.delete("/:id",deleteDoctor);    
+router.delete("/:doctor_id",deleteDoctor);    
 
 module.exports = router;

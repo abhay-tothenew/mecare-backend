@@ -113,12 +113,25 @@ exports.createDoctor = async (req, res) => {
   } = req.body;
 
   try {
+    const token = req.headers.authorization;
+    console.log(token);
+    if (!token) {
+      return res.json({
+        success: false,
+        message: "Unauthorized",
+        error: "Invalid token",
+      });
+    }
     const result = await pool.query(
       `INSERT INTO doctors (name, specialization, qualification, experience, location, phone, email)
             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
       [name, specialization, qualification, experience, location, phone, email]
     );
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      success: true,
+      message: "Doctor created successfully",
+      doctor: result.rows[0],
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
@@ -142,9 +155,12 @@ exports.updateDoctor = async (req, res) => {
 
 exports.deleteDoctor = async (req, res) => {
   try {
-    const { id } = req.params;
-    const doctor = await pool.query("DELETE FROM doctors WHERE id = $1", [id]);
-    res.json(doctor.rows);
+    const { doctor_id } = req.params;
+    const doctor = await pool.query("DELETE FROM doctors WHERE doctor_id = $1", [doctor_id]);
+    res.json({
+      success: true,
+      message: "Doctor deleted successfully",
+    });
   } catch (err) {
     console.error(err.message);
   }

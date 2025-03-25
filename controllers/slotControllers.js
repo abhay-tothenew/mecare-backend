@@ -7,7 +7,7 @@ exports.getSlots = async (req, res) => {
     res.json({
       success: true,
       message: "Slots retrieved successfully",
-      slots: slots.rows[0],
+      slots: slots.rows,
     });
   } catch (err) {
     console.error("Error in getSlots: ", err.message);

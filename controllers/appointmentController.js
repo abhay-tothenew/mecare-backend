@@ -4,11 +4,7 @@ const moment = require("moment");
 exports.getAppointments = async (req, res) => {
   try {
     const appointments = await pool.query("SELECT * FROM appointments");
-    res.json({
-      success: true,
-      message: "Appointments retrieved successfully",
-      appointments: appointments.rows,
-    });
+    res.json(appointments.rows);
   } catch (err) {
     console.error("Error in getAppointments: ", err.message);
     res.json({
