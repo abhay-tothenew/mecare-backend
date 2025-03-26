@@ -18,7 +18,6 @@ const sendMail = async(to,subject,message)=>{
         const htmlContent = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <h2 style="color: #007bff;">Appointment Status Update</h2>
-          <p>Dear User,</p>
           <p>${message}</p>
           <p>If you have any questions or need further assistance, feel free to contact us.</p>
           <br>

@@ -115,9 +115,18 @@ exports.createAppointment = async (req, res) => {
       ]
     );
 
+    const user_email = patient_email;
+    let subject = `MeCare - Your Appointment Status: Pending`;
+    let message = "";
+
+    message =
+      "Your appointment request has been received and is currently pending confirmation.";
+
+    await sendMail(user_email, subject, message);
+
     res.json({
       success: true,
-      message: "Appointment created successfully!",
+      message: "Appointment created successfully and mail sent successfully",
       appointment: appointmentResult.rows[0],
     });
   } catch (err) {
@@ -153,7 +162,7 @@ exports.updateAppointment = async (req, res) => {
   }
 };
 
-//FOR ADMIN PURPOSES
+//FOR ADMIN PURPOSES - UPDATE APPOINTMENT STATUS
 exports.updateAppointmentStatus = async (req, res) => {
   try {
     const { appointment_id } = req.params;
@@ -179,11 +188,11 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 
     const appointmentDB = appointment.rows[0];
-    console.log("appointmentDB--->>>", appointmentDB);
 
-    const user_details = await pool.query("SELECT * FROM users WHERE user_id = $1", [
-      appointmentDB.user_id,
-    ]);
+    const user_details = await pool.query(
+      "SELECT name, email FROM users WHERE user_id = $1",
+      [appointmentDB.user_id]
+    );
 
     if (user_details.rowCount === 0) {
       return res.json({
@@ -192,24 +201,72 @@ exports.updateAppointmentStatus = async (req, res) => {
       });
     }
 
-    const user_email = user_details.rows[0].email;
-    let subject = `MeCare - Your Appointment Status: ${status}`;
-    let message = "";
+    const { name: patientName, email: user_email } = user_details.rows[0];
 
-    if (status === "pending") {
-      message =
-        "Your appointment request has been received and is currently pending confirmation.";
-    } else if (status === "confirmed") {
-      message =
-        "Great news! Your appointment has been confirmed. Please be on time.";
-    } else if (status === "rejected") {
-      message =
-        "We regret to inform you that your appointment request has been rejected. Please try booking another slot.";
-    } else {
-      message = `Your appointment status has been updated to ${status}.`;
+    const doctor_details = await pool.query(
+      "SELECT name FROM doctors WHERE doctor_id = $1",
+      [appointmentDB.doctor_id]
+    );
+
+    if (doctor_details.rowCount === 0) {
+      return res.json({
+        error: "Doctor not found",
+        message: "Doctor not found",
+      });
     }
 
-    await sendMail(user_email, subject, message);
+    const doctorName = doctor_details.rows[0].name;
+
+    let subject = `MeCare - Your Appointment Status: ${status}`;
+
+    let message = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;">
+        <p>Dear <strong>${patientName}</strong>,</p>
+    
+        <p>Your appointment details are as follows:</p>
+    
+        <table style="border-collapse: collapse; width: 100%;">
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Doctor</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${doctorName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Date</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${
+              appointmentDB.appointment_date
+            }</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Time</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${
+              appointmentDB.appointment_time
+            }</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Type</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${
+              appointmentDB.appointment_type
+            }</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Status</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>${status.toUpperCase()}</strong></td>
+          </tr>
+        </table>
+    
+        <p style="margin-top: 20px;">`;
+
+    if (status === "pending") {
+      message += `Your appointment request is <strong>pending confirmation</strong>.`;
+    } else if (status === "confirmed") {
+      message += `<strong>Great news!</strong> Your appointment has been <strong>confirmed</strong>. Please be on time.`;
+    } else if (status === "cancelled") {
+      message += `Your appointment has been <strong>cancelled</strong>. If this was not intentional, please rebook.`;
+    } else if (status === "completed") {
+      message += `Your appointment has been <strong>successfully completed</strong>. Thank you for choosing MeCare.`;
+    }
+
+    await sendMail(user_email, subject, message, true);
 
     res.json({
       success: true,
@@ -217,7 +274,7 @@ exports.updateAppointmentStatus = async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
-    res.json({
+    res.status(500).json({
       success: false,
       error: "Internal server error",
       message: err.message,
