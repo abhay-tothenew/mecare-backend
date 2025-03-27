@@ -86,14 +86,15 @@ exports.createAppointment = async (req, res) => {
         [doctor_id, startTime, endTime, appointment_date, appointment_type]
       );
       slot_id = newSlot.rows[0].slot_id;
-    } else {
-      slot_id = slotResult.rows[0].slot_id;
-
-      await pool.query(
-        `UPDATE slots SET availability_status = FALSE WHERE slot_id = $1`,
-        [slot_id]
-      );
     }
+    //  else {
+    //   slot_id = slotResult.rows[0].slot_id;
+
+    //   await pool.query(
+    //     `UPDATE slots SET availability_status = FALSE WHERE slot_id = $1`,
+    //     [slot_id]
+    //   );
+    // }
 
     const appointmentResult = await pool.query(
       `INSERT INTO appointments (user_id, doctor_id, slot_id, appointment_type, appointment_date, appointment_time, patient_name, phone_number, patient_email, patient_gender, patient_age, health_description) 
@@ -115,12 +116,48 @@ exports.createAppointment = async (req, res) => {
       ]
     );
 
+    const name = await pool.query(
+      "SELECT name FROM doctors WHERE doctor_id = $1",
+      [doctor_id]
+    );
+
+    const doctorName = name.rows[0].name;
+    
+
+    console.log("doctorName--->>>", doctorName);
     const user_email = patient_email;
     let subject = `MeCare - Your Appointment Status: Pending`;
-    let message = "";
 
-    message =
-      "Your appointment request has been received and is currently pending confirmation.";
+    let message = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6;">
+        <p>Dear <strong>${patient_name}</strong>,</p>
+    
+        <p>Your appointment details are as follows:</p>
+    
+        <table style="border-collapse: collapse; width: 100%;">
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Doctor</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${doctorName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Date</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${appointment_date}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Time</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${appointment_time}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Type</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${appointment_type}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Status</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>PENDING</strong></td>
+          </tr>
+        </table>
+    
+        <p style="margin-top: 20px;">`;
 
     await sendMail(user_email, subject, message);
 

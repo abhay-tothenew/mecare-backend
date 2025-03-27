@@ -68,7 +68,10 @@ exports.getTopDoctors = async (req, res) => {
 exports.getDoctorsBySpecialization = async (req, res) => {
   try {
     const { category_name } = req.params;
-    const catName = category_name.replaceAll(" ", "_");
+
+    const catName = category_name.replaceAll("_", " ");
+    console.log(catName);
+
     const doctors = await pool.query(
       "SELECT * FROM doctors WHERE specialization = $1",
       [catName]
@@ -141,12 +144,33 @@ exports.createDoctor = async (req, res) => {
 exports.updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, specialization, experience, bio } = req.body;
+    console.log(req.params, req.body);
+    const {
+      name,
+      email,
+      specialization,
+      experience,
+      qualification,
+      phone,
+      location,
+    } = req.body;
     const doctor = await pool.query(
-      "UPDATE doctors SET name=$1, email=$2, specialization=$4, experience=$5, bio=$6 WHERE doctor_id=$7 RETURNING *",
-      [name, email, specialization, experience, bio, id]
+      "UPDATE doctors SET name=$1, email=$2, specialization=$3, experience=$4, qualification=$5, phone=$6, location=$7 WHERE doctor_id=$8 RETURNING *",
+      [
+        name,
+        email,
+        specialization,
+        experience,
+        qualification,
+        phone,
+        location,
+        id,
+      ]
     );
-    res.json(doctor.rows[0]);
+    res.json({
+      success: true,
+      message: "Doctor updated successfully",
+    });
   } catch (err) {
     console.error(err.message);
   }
@@ -155,7 +179,10 @@ exports.updateDoctor = async (req, res) => {
 exports.deleteDoctor = async (req, res) => {
   try {
     const { doctor_id } = req.params;
-    const doctor = await pool.query("DELETE FROM doctors WHERE doctor_id = $1", [doctor_id]);
+    const doctor = await pool.query(
+      "DELETE FROM doctors WHERE doctor_id = $1",
+      [doctor_id]
+    );
     res.json({
       success: true,
       message: "Doctor deleted successfully",

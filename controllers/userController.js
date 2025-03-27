@@ -45,7 +45,9 @@ exports.loginUser = async (req, res) => {
     ]);
 
     if (user.rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     const isPasswordCorrect = await bcrypt.compare(
       password,
@@ -61,8 +63,8 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    // console.log("token from login", token);
-    res.json({ token, user: user.rows[0] });
+    console.log("token from login", token);
+    res.json({ success: true, token, user: user.rows[0] });
   } catch (err) {
     console.log("Error while login", err);
     res.status(500).json({ message: "Internal server error" });
