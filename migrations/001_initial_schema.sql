@@ -66,3 +66,14 @@ CREATE TABLE IF NOT EXISTS disease_categories (
     category_name VARCHAR(255) NOT NULL,
     category_tag VARCHAR(255) NOT NULL
 );
+
+
+-- Reviews Table
+CREATE TABLE reviews (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    doctor_id INT REFERENCES doctors(id) ON DELETE CASCADE,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    review_text TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

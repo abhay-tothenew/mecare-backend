@@ -122,7 +122,6 @@ exports.createAppointment = async (req, res) => {
     );
 
     const doctorName = name.rows[0].name;
-    
 
     console.log("doctorName--->>>", doctorName);
     const user_email = patient_email;
@@ -184,6 +183,12 @@ exports.updateAppointment = async (req, res) => {
       "UPDATE appointments SET appointment_type=$1, appointment_date=$2, appointment_time=$3 WHERE appointment_id=$4 RETURNING *",
       [appointment_type, appointment_date, appointment_time, appointment_id]
     );
+
+    await pool.query(
+      "UPDATE appointments SET status='pending' WHERE appointment_id=$1",
+      [appointment_id]
+    );
+
     res.json({
       success: true,
       message: "Appointment updated successfully",

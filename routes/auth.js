@@ -79,19 +79,19 @@ router.get(
         }
       );
       if (response.success) {
-        res.cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production" || "development",
-          sameSite: "Strict",
-          maxAge: 60 * 60 * 1000,
-        });
+        // res.cookie("token", token, {
+        //   httpOnly: true,
+        //   secure: process.env.NODE_ENV === "production" || "development",
+        //   sameSite: "Strict",
+        //   maxAge: 60 * 60 * 1000,
+        // });
 
-        res.cookie("user", JSON.stringify(user.rows[0]), {
-          httpOnly: false,
-          secure: process.env.NODE_ENV === "production" || "development",
-          sameSite: "Strict",
-          maxAge: 60 * 60 * 1000,
-        });
+        // res.cookie("user", JSON.stringify(user.rows[0]), {
+        //   httpOnly: false,
+        //   secure: process.env.NODE_ENV === "production" || "development",
+        //   sameSite: "Strict",
+        //   maxAge: 60 * 60 * 1000,
+        // });
 
         res.redirect(process.env.FRONTEND_URL);
       }
