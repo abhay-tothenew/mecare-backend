@@ -1,6 +1,8 @@
+const { token } = require("morgan");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 require("dotenv").config();
+const pool= require("../config/db");
 
 // console.log("---", process.env);
 
@@ -12,8 +14,33 @@ passport.use(
       callbackURL: "http://localhost:5000/auth/google/callback",
     },
 
-    function (request, accessToken, refreshToken, profile, cb) {
-      return cb(null, profile);
+    async function (request, accessToken, refreshToken, profile, cb) {
+
+      try{
+        const user ={
+          name:profile.displayName,
+          email:profile.emails[0].value,
+          picture:profile.photos[0].value,
+          googleId :profile.id,
+          token:accessToken
+        };
+
+
+        const result = await pool.query("SELECT * FROM users WHERE email=$1",[user.email]);
+
+
+        if(result.rows.length>0){
+          return cb(null,result.rows[0]);
+        }
+
+
+        await pool.query("INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,$4) RETURNING *",[user.name,user.email,'',"patient"]);
+
+
+        return cb(null,user);
+        }catch(err){
+          console.error("Error in google auth",err);
+      }
     }
   )
 );
