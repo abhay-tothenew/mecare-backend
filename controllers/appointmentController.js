@@ -66,8 +66,25 @@ exports.createAppointment = async (req, res) => {
       health_description,
     } = req.body;
 
+    // First check for existing appointments
+    const existingAppointment = await pool.query(
+      `SELECT * FROM appointments 
+       WHERE user_id = $1 
+       AND doctor_id = $2 
+       AND status IN ('pending', 'confirmed')`,
+      [user_id, doctor_id]
+    );
+
+    if (existingAppointment.rows.length > 0) {
+      return res.json({
+        success: false,
+        error:
+          "You already have an appointment with this doctor. Please wait for your current appointment to complete or cancel it before booking a new one.",
+      });
+    }
+
     if (!["online", "in-person"].includes(appointment_type)) {
-      return res.status(400).json({
+      return res.json({
         error: "Invalid appointment type. Choose 'online' or 'in-person'.",
       });
     }
