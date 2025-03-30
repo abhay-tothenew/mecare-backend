@@ -6,10 +6,11 @@ const passport = require("passport");
 const session = require("express-session");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./swagger");
+require("dotenv").config();
 
 const app = express();
 const http = require("http");
-const server = http.createServer(app);
+// const server = http.createServer(app);
 
 require("./config/googleAuth");
 
@@ -48,7 +49,7 @@ app.use("/api/reviews", require("./routes/reviews"));
 app.use("/api/admin", require("./routes/admin"));
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server is running at ${PORT}`);
   console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
 });
