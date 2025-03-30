@@ -4,6 +4,8 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const passport = require("passport");
 const session = require("express-session");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpecs = require("./swagger");
 
 const app = express();
 const http = require("http");
@@ -32,6 +34,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
 // Routes
 app.use("/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
@@ -45,4 +50,5 @@ app.use("/api/admin", require("./routes/admin"));
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server is running at ${PORT}`);
+  console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
 });

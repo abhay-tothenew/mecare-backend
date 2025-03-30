@@ -19,15 +19,22 @@ const pool = new Pool({
 
 async function runMigrations() {
   try {
-    const schemaPath = path.join(
-      __dirname,
-      "migrations",
-      "001_initial_schema.sql"
-    );
-    const schema = fs.readFileSync(schemaPath, "utf8");
+    // Get all migration files
+    const migrationsDir = path.join(__dirname, "migrations");
+    const migrationFiles = fs.readdirSync(migrationsDir)
+      .filter(file => file.endsWith('.sql'))
+      .sort(); // This ensures migrations run in order (001, 002, etc.)
 
-    await pool.query(schema);
-    console.log("Database schema applied successfully.");
+    for (const file of migrationFiles) {
+      console.log(`Running migration: ${file}`);
+      const migrationPath = path.join(migrationsDir, file);
+      const migration = fs.readFileSync(migrationPath, "utf8");
+      
+      await pool.query(migration);
+      console.log(`Migration ${file} applied successfully.`);
+    }
+    
+    console.log("All migrations completed successfully.");
   } catch (err) {
     console.error("Migration failed:", err);
   } finally {

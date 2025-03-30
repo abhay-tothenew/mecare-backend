@@ -3,6 +3,8 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 require("dotenv").config();
 const pool= require("../config/db");
+// const rateLimit = require('express-rate-limit');
+const cors = require('cors');
 
 // console.log("---", process.env);
 

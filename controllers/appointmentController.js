@@ -1,9 +1,13 @@
 const pool = require("../config/db");
 const moment = require("moment");
 const sendMail = require("../services/emailService");
+const { validateAppointmentSlot } = require("../services/appointmentService");
+
 exports.getAppointments = async (req, res) => {
   try {
-    const appointments = await pool.query("SELECT * FROM appointments");
+    const appointments = await pool.query(
+      "SELECT * FROM appointments ORDER BY id DESC"
+    );
     res.json(appointments.rows);
   } catch (err) {
     console.error("Error in getAppointments: ", err.message);
@@ -68,11 +72,22 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    const startTime = moment(appointment_time, "HH:mm:ss").format("HH:mm:ss");
-    const endTime = moment(startTime, "HH:mm:ss")
-      .add(30, "minutes")
-      .format("HH:mm:ss");
+    const slotValidation = await validateAppointmentSlot(
+      doctor_id,
+      appointment_date,
+      appointment_time
+    );
 
+    if (!slotValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        error: slotValidation.message,
+      });
+    }
+
+    const { startTime, endTime } = slotValidation;
+
+    // Check if slot exists
     let slotResult = await pool.query(
       `SELECT slot_id FROM slots WHERE doctor_id = $1 AND start_time = $2 AND slot_date = $3`,
       [doctor_id, startTime, appointment_date]
@@ -81,21 +96,14 @@ exports.createAppointment = async (req, res) => {
     let slot_id;
     if (slotResult.rows.length === 0) {
       const newSlot = await pool.query(
-        `INSERT INTO slots (doctor_id, start_time, end_time, slot_date, availability_status,slot_type) 
+        `INSERT INTO slots (doctor_id, start_time, end_time, slot_date, availability_status, slot_type) 
          VALUES ($1, $2, $3, $4, FALSE, $5) RETURNING slot_id`,
         [doctor_id, startTime, endTime, appointment_date, appointment_type]
       );
       slot_id = newSlot.rows[0].slot_id;
     }
-    //  else {
-    //   slot_id = slotResult.rows[0].slot_id;
 
-    //   await pool.query(
-    //     `UPDATE slots SET availability_status = FALSE WHERE slot_id = $1`,
-    //     [slot_id]
-    //   );
-    // }
-
+    // Create the appointment
     const appointmentResult = await pool.query(
       `INSERT INTO appointments (user_id, doctor_id, slot_id, appointment_type, appointment_date, appointment_time, patient_name, phone_number, patient_email, patient_gender, patient_age, health_description) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -116,6 +124,7 @@ exports.createAppointment = async (req, res) => {
       ]
     );
 
+    // Get doctor name for email
     const name = await pool.query(
       "SELECT name FROM doctors WHERE doctor_id = $1",
       [doctor_id]
@@ -123,7 +132,7 @@ exports.createAppointment = async (req, res) => {
 
     const doctorName = name.rows[0].name;
 
-    console.log("doctorName--->>>", doctorName);
+    // Send confirmation email
     const user_email = patient_email;
     let subject = `MeCare - Your Appointment Status: Pending`;
 
@@ -167,7 +176,7 @@ exports.createAppointment = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating appointment:", err.message);
-    res.json({
+    res.status(500).json({
       success: false,
       error: "Internal server error",
       message: err.message,
