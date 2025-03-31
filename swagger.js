@@ -10,11 +10,11 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: 'https://mecare-frontend.vercel.app',
         description: 'Development server',
       },
       {
-        url: 'https://api.mecare.com',
+        url: 'https://mecare-backend.onrender.com',
         description: 'Production server',
       },
     ],
